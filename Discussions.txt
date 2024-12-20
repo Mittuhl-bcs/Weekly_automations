@@ -1,0 +1,34 @@
+
+
+Sequence:
+- Pull the data through the query
+- filter the data for each of the table 
+- compute the pivot table / modified groupby
+    - apply filters on 2 of the pivot tables 
+- organize it on summary page
+
+- Save the pivot data
+- develop a mailer - add the data as a table
+- Send it with attached file
+
+
+Doubts:
+- location id in IR
+- Pivot tables in different pages
+
+
+- all the data for transfers
+- Inventory returns
+- distinct count
+- filter out the data that has recieved date - partially recived
+- formatting - rounds with commas
+
+
+
+13-12-2024 discussions:
+- supplier name and shipto (avoid) - IR
+- No decimal point
+- partial - last column (avoid)
+- No index
+- sequence - transfer, partial, rma, ir
+- Every wednesday
