@@ -40,7 +40,7 @@ def read_data():
 from openpyxl.styles import Border, Side, Alignment, Font
 from openpyxl import load_workbook
 def pivot_table(transfer_df, rma_df, ir_df):
-    output_file = "wednesday_reports.xlsx"
+    output_file = "D:\\Brian's report automation\\Transfers and RMA\\wednesday_RMA_reports.xlsx"
     
     # Writing to Excel with different sheet names
     with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
@@ -68,6 +68,7 @@ def pivot_table(transfer_df, rma_df, ir_df):
             partial_transfer_df, 
             values=['received_date'], 
             index=['transfer_no', "from_name", "to_name"],
+            aggfunc='count', 
             fill_value=0
         )
 
@@ -99,7 +100,7 @@ def pivot_table(transfer_df, rma_df, ir_df):
             fill_value=0
         )
 
-        rma_pivot_df['open_line_value'] = rma_pivot_df['open_line_value'].round(0)
+        rma_pivot_df['open_line_value'] = rma_pivot_df['open_line_value'].round(0).astype(int)
 
         # Write the pivot table to a new sheet
         rma_pivot_df.to_excel(writer, sheet_name='Pivot Summary - RMA')
@@ -125,7 +126,7 @@ def pivot_table(transfer_df, rma_df, ir_df):
             fill_value=0
         )
 
-        ir_pivot_df['l_unit_price'] = ir_pivot_df['l_unit_price'].round(0)
+        ir_pivot_df['l_unit_price'] = ir_pivot_df['l_unit_price'].round(0).astype(int)
         ir_pivot_df.to_excel(writer, sheet_name='Pivot Summary - IR')
 
 
@@ -387,7 +388,7 @@ def pivot_table(transfer_df, rma_df, ir_df):
 def main():
     tdf, rdf, irdf = read_data()
     transfers_table, rma_table, ir_table, partial = pivot_table(tdf, rdf, irdf)
-    mailer.sender("wednesday_reports.xlsx", transfers_table, rma_table, ir_table, partial)
+    mailer.sender("D:\\Brian's report automation\\Transfers and RMA\\wednesday_RMA_reports.xlsx", transfers_table, rma_table, ir_table, partial)
 
 
 if __name__ == "__main__":

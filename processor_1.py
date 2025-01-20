@@ -39,7 +39,7 @@ def remove_all_files_in_folder(folder_path):
 
 from openpyxl.styles import Border, Side, Alignment, Font
 from openpyxl import load_workbook
-def pivot_table(rma_df, prefix, folder_path):
+def pivot_table(rma_df, prefix, folder_path, new_loop):
 
     new_dir = "Quotes"
 
@@ -48,6 +48,10 @@ def pivot_table(rma_df, prefix, folder_path):
 
     output_file_path = f"{prefix} - All Quote Detail Report.xlsx"
     os.makedirs(new_directory_path, exist_ok=True)
+
+    if new_loop:
+        
+        remove_all_files_in_folder(new_directory_path)
 
     #remove_all_files_in_folder(new_directory_path)
 
@@ -72,7 +76,7 @@ def pivot_table(rma_df, prefix, folder_path):
 
 
         # Write the pivot table to a new sheet
-        rma_pivot_df.to_excel(writer, sheet_name='Pivot Summary - Quotes by customers')
+        rma_pivot_df.to_excel(writer, sheet_name='Pivot Summary - Quotes')
         rma_table = rma_pivot_df.to_html(classes='table table-striped', border=1,  index=False)
 
         # Add custom styling (bold column headers and outer borders)
@@ -83,7 +87,7 @@ def pivot_table(rma_df, prefix, folder_path):
 
     # Load the workbook to apply formatting
     wb = load_workbook(output_file)
-    ws = wb['Pivot Summary - Quotes by customers']
+    ws = wb['Pivot Summary - Quotes']
 
     # Swap the first and second rows
     #for col_idx in range(1, len(ws[1]) + 1):  # Loop over columns in the first row
@@ -136,7 +140,7 @@ def pivot_table(rma_df, prefix, folder_path):
 
     print(f'Pivot table created and saved to {output_file}')
 
-    df = pd.read_excel(output_file, sheet_name="Pivot Summary - Quotes by customers")
+    df = pd.read_excel(output_file, sheet_name="Pivot Summary - Quotes")
     
     ir_table = df.to_html(classes='table table-striped', border=0,  index=False)
     # Add custom styling (bold column headers and outer borders)
@@ -151,27 +155,34 @@ def pivot_table(rma_df, prefix, folder_path):
 
 
 def table_creator(df):
-
     today = pd.to_datetime("today")
-
+    
     df["days_open"] = (today - df["order_date"]).dt.days
     
     bins = [0, 30, 60, 90, 180, float('inf')]  # Adjusted bins, the last bin is open-ended
     labels = ['0-30', '30-60', '60-90', '90-180', '180+']
-    df['day_range'] = pd.cut(df['date_difference'], bins=bins, labels=labels, right=True)
+    df['day_range'] = pd.cut(df['days_open'], bins=bins, labels=labels, right=True)
 
     # Create the pivot table
     pivot_df = pd.pivot_table(
             df, 
             values=['Open_Value'], 
             index=['sales_location', 'day_range'],  
-            aggfunc={
-                'Open_Value': lambda x: round(np.sum(x), 0)  # Sum and then round
-            },
+            aggfunc={'Open_Value': lambda x: round(np.sum(x), 0)},  # Sum and then round
             fill_value=0
         )
     
-    return pivot_df
+    pivot_df['Open_Value'] = pivot_df['Open_Value'].round(0).astype(int)
+
+    # Convert the pivot table to an HTML table with desired styles
+    pivot_html = pivot_df.to_html(classes='table table-striped', border=0, index=True)
+    
+    # Add custom styling (bold column headers and outer borders)
+    pivot_html = pivot_html.replace('<table', '<table style="border-collapse: collapse; border: 2px solid black;"')
+    pivot_html = pivot_html.replace('<th>', '<th style="font-weight: bold; text-align: center; padding: 8px; border: 1px solid black;">')
+    pivot_html = pivot_html.replace('<td>', '<td style="text-align: center; padding: 8px; border: 1px solid black;">')
+
+    return pivot_html
 
 
 
@@ -198,14 +209,17 @@ def main():
         10770: "TN"     # Nashville
     }
 
+    new_loop = True
 
     for id, prefix in ids.items():
 
         tdf = read_data(str(id))
         print("Read the data from database...")
-        df, new_dir_path = pivot_table(tdf,  prefix, folder_path)
+        df, new_dir_path = pivot_table(tdf,  prefix, folder_path, new_loop)
 
         main_df = pd.concat([df, main_df], ignore_index=False)
+
+        new_loop = False
 
     tab_df = table_creator(main_df)
 

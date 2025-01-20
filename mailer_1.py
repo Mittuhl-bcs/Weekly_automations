@@ -7,6 +7,7 @@ from email import encoders
 import json
 import os
 from datetime import datetime
+import zipfile
 import shutil  # Import shutil to create a zip file
 
 
@@ -20,7 +21,7 @@ def send_email(attachment_filename, attachment_display_name, orders_df, quote_df
         # Credentials for usage
         sender_email = "Bcs.notifications@building-controls.com"  # Outlook email address
         sender_password = password  
-        receiver_emails = ["mithul.murugaadev@building-controls.com"]  # List of recipient email addresses 
+        receiver_emails = ["mithul.murugaadev@building-controls.com"]  # List of recipient email addresses , "brian.ackerman@building-controls.com"
         subject = 'Wednesday Automated reports'
 
         # Set up the MIME
@@ -143,8 +144,8 @@ def send_email(attachment_filename, attachment_display_name, orders_df, quote_df
                     <p>Hi Team,</p>
                     <p>A sample report data is generated and shared through this automated mail. Please find the Excel file attached for further review.</p>
 
-                    <!-- Transfer Table -->
-                    <h3>Transfer Report</h3>
+                    <!-- Orders Table -->
+                    <h3>Orders Table</h3>
                     <div class="table-container">
                         <p>The below given is the transfer table:</p>
                         <table>
@@ -153,8 +154,8 @@ def send_email(attachment_filename, attachment_display_name, orders_df, quote_df
                     </div>
                     <br>
 
-                    <!-- Transfer Table -->
-                    <h3>Transfer Report</h3>
+                    <!-- Quote Table -->
+                    <h3>Quote Table</h3>
                     <div class="table-container">
                         <p>The below given is the customer table:</p>
                         <table>
@@ -175,7 +176,7 @@ def send_email(attachment_filename, attachment_display_name, orders_df, quote_df
             </html>
 """
 
-        message.attach(MIMEText(body, 'plain'))
+        message.attach(MIMEText(body, 'html'))
 
         # Open the zip file to be sent
         with open(attachment_filename, 'rb') as attachment:
@@ -211,9 +212,21 @@ def send_email(attachment_filename, attachment_display_name, orders_df, quote_df
 
 
 def create_zip_from_folders(folder_path_1, folder_path_2, zip_filename):
-    # Create a zip file from two folder paths
-    shutil.make_archive(zip_filename, 'zip', root_dir=os.path.dirname(folder_path_1), base_dir=os.path.basename(folder_path_1))
-    shutil.make_archive(zip_filename, 'zip', root_dir=os.path.dirname(folder_path_2), base_dir=os.path.basename(folder_path_2))
+    # Create a zip file that will contain both folders
+    with zipfile.ZipFile(f'{zip_filename}.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
+        # Add all files from the first folder
+        for root, dirs, files in os.walk(folder_path_1):
+            for file in files:
+                file_path = os.path.join(root, file)
+                # Add file to the zip with a relative path to the folder
+                zipf.write(file_path, os.path.relpath(file_path, folder_path_1))
+
+        # Add all files from the second folder
+        for root, dirs, files in os.walk(folder_path_2):
+            for file in files:
+                file_path = os.path.join(root, file)
+                # Add file to the zip with a relative path to the folder
+                zipf.write(file_path, os.path.relpath(file_path, folder_path_2))
 
 
 def sender(folder_path_1, folder_path_2, orders_df, quote_df):

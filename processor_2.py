@@ -45,11 +45,12 @@ def pivot_table(rma_df, prefix, folder_path, new_loop):
 
     new_dir = "All orders"
 
-    if new_loop:
-        # Combine the folder path with the new directory name
-        new_directory_path = os.path.join(folder_path, new_dir)
-        os.makedirs(new_directory_path, exist_ok=True)
+    # Combine the folder path with the new directory name
+    new_directory_path = os.path.join(folder_path, new_dir)
+    os.makedirs(new_directory_path, exist_ok=True)
 
+    if new_loop:
+        
         remove_all_files_in_folder(new_directory_path)
 
 
@@ -230,7 +231,7 @@ def table_creator(df):
     
     bins = [0, 30, 60, 90, 180, float('inf')]  # Adjusted bins, the last bin is open-ended
     labels = ['0-30', '30-60', '60-90', '90-180', '180+']
-    df['day_range'] = pd.cut(df['date_difference'], bins=bins, labels=labels, right=True)
+    df['day_range'] = pd.cut(df['days_open'], bins=bins, labels=labels, right=True)
 
     # Create the pivot table
     pivot_df = pd.pivot_table(
@@ -243,7 +244,19 @@ def table_creator(df):
             fill_value=0
         )
     
-    return pivot_df
+    pivot_df['Open_Value'] = pivot_df['Open_Value'].round(0).astype(int)
+    
+    # Convert the pivot table to an HTML table with desired styles
+    pivot_html = pivot_df.to_html(classes='table table-striped', border=0, index=True)
+    
+    # Add custom styling (bold column headers and outer borders)
+    # Add custom styling (bold column headers and outer borders)
+    pivot_html = pivot_html.replace('<table', '<table style="border-collapse: collapse; border: 2px solid black;"')
+    pivot_html = pivot_html.replace('<th>', '<th style="font-weight: bold; text-align: center; padding: 8px; border: 1px solid black;">')
+    pivot_html = pivot_html.replace('<td>', '<td style="text-align: center; padding: 8px; border: 1px solid black;">')
+
+    
+    return pivot_html
 
 
 
@@ -283,7 +296,9 @@ def main():
 
         newloop = False
 
+
     tab_df = table_creator(main_df)
+
 
     return new_dir_path, tab_df
 

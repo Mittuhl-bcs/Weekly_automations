@@ -272,7 +272,7 @@ INNER JOIN p21_view_location LOC ON IRH.location_id = LOC.location_id
 INNER JOIN dbo.inv_loc INVLOC WITH (NOLOCK) ON IRH.location_id = INVLOC.location_id and IRL.inv_mast_uid = INVLOC.inv_mast_uid
 INNER JOIN code_p21 CL on irl.row_status_flag = CL.code_no
 INNER JOIN code_p21 CH on irH.row_status_flag = CH.code_no
-LEFT JOIN p21_view_unvouched_po_currency_report UNVPO on IRH.return_number = CAST(UNVPO.unvouched_document_no AS DEC(19,0)) and IRL.line_number = UNVPO.line_number
+LEFT JOIN p21_view_unvouched_po_currency_report UNVPO on convert(varchar(20), IRH.return_number) = UNVPO.unvouched_document_no and IRL.line_number = UNVPO.line_number
 
  
 
