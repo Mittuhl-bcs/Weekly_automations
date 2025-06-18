@@ -1,5 +1,6 @@
 import pandas as pd
 import openpyxl
+from openpyxl.utils import range_boundaries
 from openpyxl import Workbook
 import win32com.client as win32
 from openpyxl.styles import Font, Alignment, Border, Side
@@ -40,7 +41,7 @@ def read_data():
 from openpyxl.styles import Border, Side, Alignment, Font
 from openpyxl import load_workbook
 def pivot_table(transfer_df, rma_df, ir_df):
-    output_file = "D:\\Brian's report automation\\Transfers and RMA\\wednesday_RMA_reports.xlsx"
+    output_file = "D:\\Brians_report_automation\\Transfers and RMA\\wednesday_RMA_reports.xlsx"
     
     # Writing to Excel with different sheet names
     with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
@@ -134,9 +135,23 @@ def pivot_table(transfer_df, rma_df, ir_df):
     wb = load_workbook(output_file)
     ws = wb['Pivot Summary - RMA']
 
-    # Swap the first and second rows
+
+    # Swap the first and second rows, avoiding merged cells
     for col_idx in range(1, len(ws[1]) + 1):  # Loop over columns in the first row
-        ws.cell(row=2, column=col_idx).value, ws.cell(row=1, column=col_idx).value = ws.cell(row=1, column=col_idx).value, ws.cell(row=2, column=col_idx).value
+        cell1 = ws.cell(row=1, column=col_idx)
+        cell2 = ws.cell(row=2, column=col_idx)
+
+        # Check if the cell is part of a merged range
+        is_merged = False
+        for merged_range in ws.merged_cells.ranges:
+            min_row, min_col, max_row, max_col = merged_range.min_row, merged_range.min_col, merged_range.max_row, merged_range.max_col
+            if min_row <= 1 <= max_row and min_col <= col_idx <= max_col:
+                is_merged = True
+                break
+
+        # If not merged, swap the values
+        if not is_merged:
+            cell1.value, cell2.value = cell2.value, cell1.value
 
     # Create a border style for the header and title
     border = Border(
@@ -180,14 +195,26 @@ def pivot_table(transfer_df, rma_df, ir_df):
     # Set column widths based on the content
     for col in ws.columns:
         max_length = 0
-        column = col[0].column_letter  # Get the column name
+        first_cell = col[0]  # Get the first cell in the column
+
+        # Check if the first cell in the column is part of a merged range
+        if any(first_cell.coordinate in merged_range for merged_range in ws.merged_cells.ranges):
+            # If the first cell is merged, skip it and find the first non-merged cell
+            first_cell = next((cell for cell in col if not any(cell.coordinate in merged_range for merged_range in ws.merged_cells.ranges)), first_cell)
+
+        # Now, we have a valid first cell (not merged), so we can safely access column_letter
+        column = first_cell.column_letter  # Get the column name (column letter)
+
+        # Iterate over all cells in the column to find the maximum length of values
         for cell in col:
             try:
                 if cell.value and len(str(cell.value)) > max_length:
                     max_length = len(str(cell.value))
             except:
                 pass
-        adjusted_width = (max_length + 2)
+
+        # Set the adjusted width (with a small buffer of +2)
+        adjusted_width = max_length + 2
         ws.column_dimensions[column].width = adjusted_width
 
     # Save the workbook with applied formatting
@@ -388,7 +415,7 @@ def pivot_table(transfer_df, rma_df, ir_df):
 def main():
     tdf, rdf, irdf = read_data()
     transfers_table, rma_table, ir_table, partial = pivot_table(tdf, rdf, irdf)
-    mailer.sender("D:\\Brian's report automation\\Transfers and RMA\\wednesday_RMA_reports.xlsx", transfers_table, rma_table, ir_table, partial)
+    mailer.sender("D:\\Brians_report_automation\\Transfers and RMA\\wednesday_RMA_reports.xlsx", transfers_table, rma_table, ir_table, partial)
 
 
 if __name__ == "__main__":

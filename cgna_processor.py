@@ -166,58 +166,67 @@ def filter_final(row):
         return "yes"
 
 
-df = reader_df(query)
-# Apply the function to create a new column 'city_name'
-df['Location Name'] = df['location_id'].apply(get_location_name)
+def main():
+    df = reader_df(query)
 
-# Apply the function to calculate the CGNA price and create a new column 'cgna_price'
-df['CGNA Price'] = df.apply(calculate_cgna_price, axis=1)
-
-# Apply the function to create the new column 'Location for stockable'
-df['Location for stockable'] = df.apply(location_for_stockable, axis=1)
-
-# Create the new column 'column3' by concatenating 'Location for stockable' and 'stockable'
-df['column3'] = df['Location for stockable'] + '-' + df['stockable'].astype(str)
-
-# Create the new column 'GM $Margin' by subtracting 'moving_average_cost' from 'CGNA Price'
-df['GM $Margin'] = df['CGNA Price'] - df['moving_average_cost']
-
-# Concatenating the columns with a hyphen and creating a new column 'concated'
-df['concated'] = df['Location For Stockable'] + '-' + df['stockable']
-
-# Apply the function to create the 'CC' column
-df['CC'] = df.apply(calculate_cc, axis=1)
-
-# Create the new column 'GM%' by dividing 'GM $Margin' by 'CGNA Price'
-df['GM%'] = df['GM $Margin'] / df['CGNA Price']
+    df.to_excel("temp_cgna.xlsx", index= False)
 
 
+    # Apply the function to create a new column 'city_name'
+    df['Location Name'] = df['location_id'].apply(get_location_name)
 
-# filter out the data (no null, GREEN BAY), 
-df = df[df["Location Name"].notnull()]
-df = df[~df["Location Name"].isin(["GREEN BAY"])]
-df.to_excel("D:\\Brian's report automation\\CGNA\\CGNA_report_original.xlsx", index=False)
+    # Apply the function to calculate the CGNA price and create a new column 'cgna_price'
+    df['CGNA Price'] = df.apply(calculate_cgna_price, axis=1)
+
+    # Apply the function to create the new column 'Location for stockable'
+    df['Location for stockable'] = df.apply(location_for_stockable, axis=1)
+
+    # Create the new column 'column3' by concatenating 'Location for stockable' and 'stockable'
+    df['column3'] = df['Location for stockable'] + '-' + df['stockable'].astype(str)
+
+    # Create the new column 'GM $Margin' by subtracting 'moving_average_cost' from 'CGNA Price'
+    df['GM $Margin'] = df['CGNA Price'] - df['moving_average_cost']
+
+    # Concatenating the columns with a hyphen and creating a new column 'concated'
+    df['concated'] = df['Location for stockable'] + '-' + df['stockable']
+
+    # Apply the function to create the 'CC' column
+    df['CC'] = df.apply(calculate_cc, axis=1)
+
+    # Create the new column 'GM%' by dividing 'GM $Margin' by 'CGNA Price'
+    df['GM%'] = df['GM $Margin'] / df['CGNA Price']
 
 
-# then filter out the data (N in CC)
-df = df[df["CC"] == "Y"]
-df["Final_check"] = df.apply(filter_final, axis=1)
 
-df = df[df["Final_check"] == "yes"]
+    # filter out the data (no null, GREEN BAY), 
+    df = df[df["Location Name"].notnull()]
+    df = df[~df["Location Name"].isin(["GREEN BAY"])]
+    df.to_excel("D:\\Brians_report_automation\\CGNA\\CGNA_report_original.xlsx", index=False)
 
-df = df[["item_id", "Description", "qty_available", "Supplier", "CGNA Price", "Location Name"]]
 
-print(df.head())
+    # then filter out the data (N in CC)
+    df = df[df["CC"] == "Y"]
+    df["Final_check"] = df.apply(filter_final, axis=1)
 
-df.rename(columns={
-    "Description": "item_desc", 
-    "qty_available": "Qty_Available", 
-    "Supplier": "supplier_name", 
-    "CGNA Price": "MAC+10%", 
-    "Location Name" :"Location_name"
-}, inplace=True)
+    df = df[df["Final_check"] == "yes"]
 
-df[["item_id", "item_desc", "Qty_Available", "supplier_name", "MAC+10%", "Location_name"]]
-df.to_excel("D:\\Brian's report automation\\CGNA\\BCS_CGNA.xlsx", index=False)
+    df = df[["item_id", "Description", "qty_available", "Supplier", "CGNA Price", "Location Name"]]
 
-cgna_mailer.sender("D:\\Brian's report automation\\CGNA")
+    print(df.head())
+
+    df.rename(columns={
+        "Description": "item_desc", 
+        "qty_available": "Qty_Available", 
+        "Supplier": "supplier_name", 
+        "CGNA Price": "MAC+10%", 
+        "Location Name" :"Location_name"
+    }, inplace=True)
+
+    df[["item_id", "item_desc", "Qty_Available", "supplier_name", "MAC+10%", "Location_name"]]
+    df.to_excel("D:\\Brians_report_automation\\CGNA\\BCS_CGNA.xlsx", index=False)
+
+    cgna_mailer.sender("D:\\Brians_report_automation\\CGNA")
+
+
+if __name__ == "__main__":
+    main()

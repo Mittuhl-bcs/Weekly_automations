@@ -21,7 +21,7 @@ def send_email(attachment_filename, attachment_display_name, orders_df, quote_df
         # Credentials for usage
         sender_email = "Bcs.notifications@building-controls.com"  # Outlook email address
         sender_password = password  
-        receiver_emails = ["mithul.murugaadev@building-controls.com"]  # List of recipient email addresses , "brian.ackerman@building-controls.com"
+        receiver_emails = ["mithul.murugaadev@building-controls.com", "brian.ackerman@building-controls.com"]  # List of recipient email addresses , ""
         subject = 'Wednesday Automated reports'
 
         # Set up the MIME

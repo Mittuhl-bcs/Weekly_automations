@@ -20,7 +20,7 @@ def send_email(transfer_table, rma_table, ir_table, partial, attachment_filename
         # Credentials for usage
         sender_email = "Bcs.notifications@building-controls.com"  # Outlook email address
         sender_password = password  
-        receiver_emails = ["mithul.murugaadev@building-controls.com", "brian.ackerman@building-controls.com"]  # List of recipient email addresses , "
+        receiver_emails = ["mithul.murugaadev@building-controls.com", "brian.ackerman@building-controls.com"]  # List of recipient email addresses 
         subject = 'Wednesday Automated reports'
 
         # Generate the HTML table to include in the email body
